@@ -44,7 +44,7 @@
       </div>
     </div>
     <script>
-      // ====== Аналог Java-класса BankAccount ======
+      //Java-класс BankAccount
       class BankAccount {
         constructor(name, money) {
           this.name = name;
@@ -81,16 +81,16 @@
         }
       }
 
-      // ====== Аналог Java main: список + стартовые счета ======
+      //Java main: список + стартовые счета
       const accounts = [
         new BankAccount("Tom", 1000),
         new BankAccount("Stane", 8000),
-        new BankAccount("Ludic", -9000), // как в Java — обрежется до 0
+        new BankAccount("Ludic", -9000),
       ];
 
-      let selectedIndex = -1; // -1 = ничего не выбрано
+      let selectedIndex = -1;
 
-      // ====== Ссылки на элементы ======
+      // Ссылки на элементы
       const myList = document.getElementById('myList');
       const addBtn = document.getElementById('addBtn');
       const newAccountBlock = document.getElementById('newAccountBlock');
@@ -107,17 +107,17 @@
       const withdrawBtn = document.getElementById('withdrawBtn');
       const transferBtn = document.getElementById('transferBtn');
 
-      // ====== Отрисовка списка ======
+      //Отрисовка списка
       function renderList() {
         myList.innerHTML = '';
         accounts.forEach((acc, i) => {
           const li = document.createElement('li');
-          li.textContent = acc.print(i + 1);       // нумерация с 1, как в Java printf("%d.", i+1)
+          li.textContent = acc.print(i + 1);
           if (i === selectedIndex) li.classList.add('selected');
 
           li.addEventListener('click', () => {
             selectedIndex = i;
-            renderList();       // перерисовать — чтобы подсветился выбранный
+            renderList();
             updateActions();
           });
 
@@ -125,13 +125,13 @@
         });
       }
 
-      // ====== Показ/скрытие блока операций ======
+      // Показ/скрытие блока операций
       function updateActions() {
         const hasAccount = selectedIndex !== -1;
 
         actions.classList.toggle('visible', hasAccount);
 
-        // кнопки активны, только если счёт выбран (аналогично disabled)
+        // кнопки активны, только если счёт выбран
         depositBtn.disabled = !hasAccount;
         withdrawBtn.disabled = !hasAccount;
         transferBtn.disabled = !hasAccount;
@@ -144,17 +144,17 @@
         }
       }
 
-      // ====== Кнопка "Добавить новый счёт" — только показать форму ======
+      // Кнопка "Добавить новый счёт"
       addBtn.addEventListener('click', () => {
         newAccountBlock.classList.add('visible');
         newOwnerName.focus();
       });
 
-      // ====== Кнопка "Создать счёт" — как choice == 0 в Java ======
+      // Кнопка "Создать счёт"
       createAccountBtn.addEventListener('click', () => {
         const name = newOwnerName.value.trim();
 
-        // повторяем readName из Java: не пусто, только буквы/пробелы
+        // readName: не пусто, только буквы/пробелы
         if (name === '') {
           alert('Ошибка: имя не может быть пустым.');
           return;
@@ -172,7 +172,7 @@
         alert('Счёт создан!');
       });
 
-      // ====== Операции: Popолнить / Снять / Перевести ======
+      // Операции: Popолнить / Снять / Перевести
       depositBtn.addEventListener('click', () => {
         if (selectedIndex === -1) return;
         const sum = parseInt(depositAmount.value, 10);
@@ -217,7 +217,7 @@
         renderList();
       });
 
-      // ====== Старт ======
+      // Старт
       renderList();
       updateActions();
     </script>
