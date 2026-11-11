@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>R-BANK</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <div class="container">
+    <h1>R-BANK</h1>
+    <h2>Банк, которому хочется доверять!</h2>
+    <h2>Список счетов вашей компании</h2>
+
+    <p class="hint">Кликните по счёту в списке, чтобы выбрать его</p>
+    <ul id="myList"></ul>
+
+    <div class="field">
+      <button id="addBtn" class="btn btn-primary">Добавить новый счёт</button>
+    </div>
+
+    <div id="newAccountBlock">
+      <div class="field">
+        <input id="newOwnerName" placeholder="Пожалуйста представьтесь:">
+        <button id="createAccountBtn" class="btn btn-primary">Создать счёт</button>
+      </div>
+    </div>
+
+    <div id="actions">
+      <div class="field">
+        <input type="number" id="depositAmount" placeholder="Сколько пополнить:">
+        <button id="depositBtn" class="btn btn-success" disabled>Пополнить</button>
+      </div>
+      <div class="field">
+        <input type="number" id="withdrawAmount" placeholder="Сколько снять:">
+        <button id="withdrawBtn" class="btn btn-danger" disabled>Снять</button>
+      </div>
+      <div class="field">
+        <input type="number" id="transferAmount" placeholder="Сколько перевести:">
+        <input id="transferTo" placeholder="Кому перевести (имя):">
+        <button id="transferBtn" class="btn btn-primary" disabled>Перевести</button>
+      </div>
+    </div>
+    <script>
+      // ====== Аналог Java-класса BankAccount ======
+      class BankAccount {
+        constructor(name, money) {
+          this.name = name;
+          this.setMoney(money);
+        }
+
+        setMoney(money) {
+          this.money = money < 0 ? 0 : money;   // как в Java: отрицательный → 0
+        }
+
+        print(index) {
+          return `${index}. Owner: ${this.name} | Balance: ${this.money}`;
+        }
+
+        deposit(dep) {
+          if (dep <= 0) return "Сумма пополнения должна быть больше 0!";
+          this.money += dep;
+          return `Счёт '${this.name}' пополнен на ${dep}. Текущий баланс: ${this.money}`;
+        }
+
+        cash(dep) {
+          if (dep <= 0) return "Сумма снятия должна быть больше 0!";
+          if (dep > this.money) return "На счёте недостаточно средств!";
+          this.money -= dep;
+          return `Со счёта '${this.name}' снято ${dep}. Текущий баланс: ${this.money}`;
+        }
+
+        transfer(target, dep) {
+          if (dep <= 0) return "Вы не можете перевести 0 или меньше!";
+          if (dep > this.money) return "На вашем счёте недостаточно средств!";
+          this.money -= dep;
+          target.money += dep;
+          return `Перевод ${dep} выполнен: '${this.name}' -> '${target.name}'`;
+        }
+      }
+
+      // ====== Аналог Java main: список + стартовые счета ======
+      const accounts = [
+        new BankAccount("Tom", 1000),
+        new BankAccount("Stane", 8000),
+        new BankAccount("Ludic", -9000), // как в Java — обрежется до 0
+      ];
+
+      let selectedIndex = -1; // -1 = ничего не выбрано
+
+      // ====== Ссылки на элементы ======
+      const myList = document.getElementById('myList');
+      const addBtn = document.getElementById('addBtn');
+      const newAccountBlock = document.getElementById('newAccountBlock');
+      const newOwnerName = document.getElementById('newOwnerName');
+      const createAccountBtn = document.getElementById('createAccountBtn');
+
+      const actions = document.getElementById('actions');
+      const depositAmount = document.getElementById('depositAmount');
+      const withdrawAmount = document.getElementById('withdrawAmount');
+      const transferAmount = document.getElementById('transferAmount');
+      const transferTo = document.getElementById('transferTo');
+
+      const depositBtn = document.getElementById('depositBtn');
+      const withdrawBtn = document.getElementById('withdrawBtn');
+      const transferBtn = document.getElementById('transferBtn');
+
+      // ====== Отрисовка списка ======
+      function renderList() {
+        myList.innerHTML = '';
+        accounts.forEach((acc, i) => {
+          const li = document.createElement('li');
+          li.textContent = acc.print(i + 1);       // нумерация с 1, как в Java printf("%d.", i+1)
+          if (i === selectedIndex) li.classList.add('selected');
+
+          li.addEventListener('click', () => {
+            selectedIndex = i;
+            renderList();       // перерисовать — чтобы подсветился выбранный
+            updateActions();
+          });
+
+          myList.appendChild(li);
+        });
+      }
+
+      // ====== Показ/скрытие блока операций ======
+      function updateActions() {
+        const hasAccount = selectedIndex !== -1;
+
+        actions.classList.toggle('visible', hasAccount);
+
+        // кнопки активны, только если счёт выбран (аналогично disabled)
+        depositBtn.disabled = !hasAccount;
+        withdrawBtn.disabled = !hasAccount;
+        transferBtn.disabled = !hasAccount;
+
+        if (!hasAccount) {
+          depositAmount.value = '';
+          withdrawAmount.value = '';
+          transferAmount.value = '';
+          transferTo.value = '';
+        }
+      }
+
+      // ====== Кнопка "Добавить новый счёт" — только показать форму ======
+      addBtn.addEventListener('click', () => {
+        newAccountBlock.classList.add('visible');
+        newOwnerName.focus();
+      });
+
+      // ====== Кнопка "Создать счёт" — как choice == 0 в Java ======
+      createAccountBtn.addEventListener('click', () => {
+        const name = newOwnerName.value.trim();
+
+        // повторяем readName из Java: не пусто, только буквы/пробелы
+        if (name === '') {
+          alert('Ошибка: имя не может быть пустым.');
+          return;
+        }
+        const isValid = [...name].every(ch => /[A-Za-zА-Яа-яЁё ]/.test(ch));
+        if (!isValid) {
+          alert('Ошибка: имя должно состоять только из букв и пробелов.');
+          return;
+        }
+
+        accounts.push(new BankAccount(name, 0));
+        newOwnerName.value = '';
+        newAccountBlock.classList.remove('visible');
+        renderList();
+        alert('Счёт создан!');
+      });
+
+      // ====== Операции: Popолнить / Снять / Перевести ======
+      depositBtn.addEventListener('click', () => {
+        if (selectedIndex === -1) return;
+        const sum = parseInt(depositAmount.value, 10);
+        if (isNaN(sum)) { alert('Введите число.'); return; }
+        const msg = accounts[selectedIndex].deposit(sum);
+        alert(msg);
+        depositAmount.value = '';
+        renderList();
+      });
+
+      withdrawBtn.addEventListener('click', () => {
+        if (selectedIndex === -1) return;
+        const sum = parseInt(withdrawAmount.value, 10);
+        if (isNaN(sum)) { alert('Введите число.'); return; }
+        const msg = accounts[selectedIndex].cash(sum);
+        alert(msg);
+        withdrawAmount.value = '';
+        renderList();
+      });
+
+      transferBtn.addEventListener('click', () => {
+        if (selectedIndex === -1) return;
+        const sum = parseInt(transferAmount.value, 10);
+        if (isNaN(sum)) { alert('Введите число.'); return; }
+
+        const targetName = transferTo.value.trim();
+        const targetIndex = accounts.findIndex(a => a.name === targetName);
+
+        if (targetIndex === -1) {
+          alert('Неверное имя получателя.');
+          return;
+        }
+        if (targetIndex === selectedIndex) {
+          alert('Нельзя перевести самому себе.');
+          return;
+        }
+
+        const msg = accounts[selectedIndex].transfer(accounts[targetIndex], sum);
+        alert(msg);
+        transferAmount.value = '';
+        transferTo.value = '';
+        renderList();
+      });
+
+      // ====== Старт ======
+      renderList();
+      updateActions();
+    </script>
+
+</body>
+
+</html>
